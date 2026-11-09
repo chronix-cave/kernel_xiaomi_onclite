@@ -527,6 +527,15 @@ static inline void flush_tlb_batched_pending(struct mm_struct *mm)
 }
 #endif /* CONFIG_ARCH_WANT_BATCHED_UNMAP_TLB_FLUSH */
 
+#ifdef CONFIG_ANDROID_SIMPLE_LMK
+extern bool lmk_kill_possible(void);
+#else
+static inline bool lmk_kill_possible(void)
+{
+	return false;
+}
+#endif
+
 extern const struct trace_print_flags pageflag_names[];
 extern const struct trace_print_flags vmaflag_names[];
 extern const struct trace_print_flags gfpflag_names[];

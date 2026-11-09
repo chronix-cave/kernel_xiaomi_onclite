@@ -235,7 +235,7 @@ unsigned long pgdat_reclaimable_pages(struct pglist_data *pgdat)
 	     node_page_state_snapshot(pgdat, NR_INACTIVE_FILE) +
 	     node_page_state_snapshot(pgdat, NR_ISOLATED_FILE);
 
-	if (get_nr_swap_pages() > 0)
+	if (get_nr_swap_pages() > 0 || lmk_kill_possible())
 		nr += node_page_state_snapshot(pgdat, NR_ACTIVE_ANON) +
 		      node_page_state_snapshot(pgdat, NR_INACTIVE_ANON) +
 		      node_page_state_snapshot(pgdat, NR_ISOLATED_ANON);

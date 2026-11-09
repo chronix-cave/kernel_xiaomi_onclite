@@ -66,6 +66,32 @@ config ANDROID_BINDER_IPC_SELFTEST
 	  exhaustively with combinations of various buffer sizes and
 	  alignments.
 
+config ANDROID_SIMPLE_LMK
+	bool "Simple Android Low Memory Killer"
+	depends on !ANDROID_LOW_MEMORY_KILLER
+	select HAVE_LOW_MEMORY_KILLER
+	---help---
+	  A small low memory killer that kills processes by their Android
+	  priority, triggered by vmpressure when reclaim struggles.
+
+if ANDROID_SIMPLE_LMK
+
+config ANDROID_SIMPLE_LMK_MINFREE
+	int "Minimum MiB of memory to free per reclaim"
+	range 8 512
+	default 128
+	help
+	  Simple LMK tries to free at least this much memory per reclaim.
+
+config ANDROID_SIMPLE_LMK_TIMEOUT_MSEC
+	int "Reclaim timeout in milliseconds"
+	range 50 1000
+	default 200
+	help
+	  How long to wait for victims to die before reclaiming again.
+
+endif
+
 endif # if ANDROID
 
 endmenu
