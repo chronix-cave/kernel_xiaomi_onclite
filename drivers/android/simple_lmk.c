@@ -413,6 +413,13 @@ static const struct kernel_param_ops simple_lmk_init_ops = {
 	.set = simple_lmk_init_set
 };
 
+static int __init simple_lmk_late_init(void)
+{
+	simple_lmk_init_set(NULL, NULL);
+	return 0;
+}
+late_initcall(simple_lmk_late_init);
+
 /* Needed to prevent Android from thinking there's no LMK and thus rebooting */
 #undef MODULE_PARAM_PREFIX
 #define MODULE_PARAM_PREFIX "lowmemorykiller."
