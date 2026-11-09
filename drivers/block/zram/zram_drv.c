@@ -1829,17 +1829,10 @@ static void zram_reset_device(struct zram *zram)
 	up_write(&zram->init_lock);
 }
 
-static ssize_t disksize_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t len)
+static int zram_set_disksize(struct zram *zram, u64 disksize)
 {
-	u64 disksize;
 	struct zcomp *comp;
-	struct zram *zram = dev_to_zram(dev);
 	int err;
-
-	disksize = memparse(buf, NULL);
-	if (!disksize)
-		return -EINVAL;
 
 	down_write(&zram->init_lock);
 	if (init_done(zram)) {
@@ -1869,13 +1862,40 @@ static ssize_t disksize_store(struct device *dev,
 	revalidate_disk(zram->disk);
 	up_write(&zram->init_lock);
 
-	return len;
+	return 0;
 
 out_free_meta:
 	zram_meta_free(zram, disksize);
 out_unlock:
 	up_write(&zram->init_lock);
 	return err;
+}
+
+static u64 zram_default_disksize;
+
+static int __init zram_disksize_setup(char *str)
+{
+	zram_default_disksize = memparse(str, NULL);
+	return 0;
+}
+early_param("zram.disksize", zram_disksize_setup);
+
+static ssize_t disksize_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t len)
+{
+	struct zram *zram = dev_to_zram(dev);
+	u64 disksize;
+	int err;
+
+	disksize = memparse(buf, NULL);
+	if (!disksize)
+		return -EINVAL;
+
+	err = zram_set_disksize(zram, disksize);
+	if (err)
+		return err;
+
+	return len;
 }
 
 static ssize_t reset_store(struct device *dev,
@@ -2090,6 +2110,13 @@ static int zram_add(void)
 	add_disk(zram->disk);
 
 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
+
+	if (zram_default_disksize) {
+		ret = zram_set_disksize(zram, zram_default_disksize);
+		if (ret)
+			pr_err("Cannot size %s to %llu bytes: %d\n",
+			       zram->disk->disk_name, zram_default_disksize, ret);
+	}
 
 	zram_debugfs_register(zram);
 	pr_info("Added device: %s\n", zram->disk->disk_name);
