@@ -212,14 +212,18 @@ static inline void zram_fill_page(void *ptr, unsigned long len,
 
 static bool page_same_filled(void *ptr, unsigned long *element)
 {
-	unsigned int pos;
+	unsigned int pos, last_pos = PAGE_SIZE / sizeof(unsigned long) - 1;
 	unsigned long *page;
 	unsigned long val;
 
 	page = (unsigned long *)ptr;
 	val = page[0];
 
-	for (pos = 1; pos < PAGE_SIZE / sizeof(*page); pos++) {
+	/* Check the last element first to fail fast on partly filled pages */
+	if (val != page[last_pos])
+		return false;
+
+	for (pos = 1; pos < last_pos; pos++) {
 		if (val != page[pos])
 			return false;
 	}
